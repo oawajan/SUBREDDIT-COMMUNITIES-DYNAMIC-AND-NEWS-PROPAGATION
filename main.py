@@ -10,8 +10,12 @@ def print_hi(name):
 
 def Project_name():
     print(f'SUBREDDIT-COMMUNITIES-DYNAMIC-AND-NEWS-PROPAGATION')
+
+def Members_names():
+    print(f'Omar and Drew')
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     print_hi('PyCharm')
-    Project_name()
+    Members_names()
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

@@ -3,6 +3,9 @@
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
@@ -14,8 +17,14 @@ def Project_name():
 def Members_names():
     print(f'Omar and Drew')
 
+
+def readdata() -> [pd.DataFrame, pd.DataFrame]:
+    titles = pd.read_csv("Data\soc-redditHyperlinks-title.tsv", delimiter="\t")
+    body = pd.read_csv("Data\soc-redditHyperlinks-body.tsv", delimiter="\t")
+    return titles, body
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
-    Members_names()
+    df1, df2 = readdata()
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

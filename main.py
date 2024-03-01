@@ -6,6 +6,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import networkx as nx
+
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
@@ -19,12 +21,13 @@ def Members_names():
 
 
 def readdata() -> [pd.DataFrame, pd.DataFrame]:
-    titles = pd.read_csv("Data\soc-redditHyperlinks-title.tsv", delimiter="\t")
-    body = pd.read_csv("Data\soc-redditHyperlinks-body.tsv", delimiter="\t")
+    titles = pd.read_csv("Data\\soc-redditHyperlinks-title.tsv", delimiter="\t")
+    body = pd.read_csv("Data\\soc-redditHyperlinks-body.tsv", delimiter="\t")
     return titles, body
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     df1, df2 = readdata()
+    print(len(df1[df1["SOURCE_SUBREDDIT"] == "conspiracy"]))
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

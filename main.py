@@ -20,14 +20,12 @@ def Members_names():
     print(f'Omar and Drew')
 
 
-def readdata() -> [pd.DataFrame, pd.DataFrame]:
-    titles = pd.read_csv("Data\\soc-redditHyperlinks-title.tsv", delimiter="\t")
-    body = pd.read_csv("Data\\soc-redditHyperlinks-body.tsv", delimiter="\t")
+def readdata() -> pd.DataFrame:
+    titles = pd.read_csv("data/soc-redditHyperlinks-title.tsv", delimiter="\t")
+    body = pd.read_csv("data/soc-redditHyperlinks-body.tsv", delimiter="\t")
     return titles, body
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     df1, df2 = readdata()
     print(len(df1[df1["SOURCE_SUBREDDIT"] == "conspiracy"]))
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/

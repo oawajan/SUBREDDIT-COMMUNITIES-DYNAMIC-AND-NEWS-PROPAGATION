@@ -11,7 +11,7 @@ body = pd.read_csv("data/soc-redditHyperlinks-body.tsv", delimiter="\t")
 all_data = pd.concat([titles, body])
 
 # Sample a subset of the data
-subset_data = all_data.sample(frac=0.1, random_state=42)  #### Change the fraction to change subset size ####
+subset_data = all_data.sample(frac=0.001, random_state=0)  #### Change the fraction to change subset size ####
 
 
 # Create directed graph
@@ -30,28 +30,29 @@ for node, community_id in partition.items():
         communities[community_id] = []
     communities[community_id].append(node)
 
-for community_id, nodes in communities.items():
-    if len(nodes)>2:
-        print(f"Community {community_id}:")
-        print(f"Number of nodes: {len(nodes)}")
-        print("Nodes:",nodes)
-        #### get the first node in each cluster just as an example ####
-        row_entry = all_data.loc[all_data['SOURCE_SUBREDDIT'] == nodes[0]].iloc[0]
-        print("Row entry:")
-        print(row_entry,'\n')
-        #### if You wish to print out all the info about all the nodes in each cluster ####
-        # for node in nodes:
-        #     print(f"Node {node}:")
-        #     # Check if there are rows matching the condition in all_data
-        #     if not all_data[all_data['SOURCE_SUBREDDIT'] == node].empty:
-        #         # Get the row entry corresponding to the node from all_data
-        #         row_entry = all_data.loc[all_data['SOURCE_SUBREDDIT'] == node].iloc[0]
-        #         print("Row entry:")
-        #         print(row_entry)
-        #     else:
-        #         print("No matching row entry found.")
-        print()
-
+# for community_id, nodes in communities.items():
+#     if len(nodes)>2:
+#         print(f"Community {community_id}:")
+#         print(f"Number of nodes: {len(nodes)}")
+#         print("Nodes:",nodes)
+#         #### get the first node in each cluster just as an example ####
+#         row_entry = all_data.loc[all_data['SOURCE_SUBREDDIT'] == nodes[0]].iloc[0]
+#         print("Row entry:")
+#         print(row_entry,'\n')
+#         #### if You wish to pr
+#
+#         int out all the info about all the nodes in each cluster ####
+#         # for node in nodes:
+#         #     print(f"Node {node}:")
+#         #     # Check if there are rows matching the condition in all_data
+#         #     if not all_data[all_data['SOURCE_SUBREDDIT'] == node].empty:
+#         #         # Get the row entry corresponding to the node from all_data
+#         #         row_entry = all_data.loc[all_data['SOURCE_SUBREDDIT'] == node].iloc[0]
+#         #         print("Row entry:")
+#         #         print(row_entry)
+#         #     else:
+#         #         print("No matching row entry found.")
+#         print()
 
 
 
@@ -64,3 +65,18 @@ for community_id, nodes in communities.items():
 # # edges
 # nx.draw_networkx_edges(G, pos, alpha=0.3)
 # plt.show()
+
+bins = list(subset_data.keys())
+bars = subset_data.value_counts('SOURCE_SUBREDDIT')
+
+print(bars.values)
+print(bars.keys())
+
+plt.bar(bars.keys()[:19], bars.values[:19], edgecolor='#008fd5')
+plt.title("Communities Activness Bar Chart")
+plt.xlabel("Communities")
+plt.ylabel("Frequency")
+plt.tick_params(labelrotation=90)
+plt.tight_layout()
+plt.legend()
+plt.show()

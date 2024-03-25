@@ -34,8 +34,7 @@ average_timestamp = all_data['TIMESTAMP'].mean()
 print(f"Average TIMESTAMP: {average_timestamp}")
 
 #filtering the post id to the most common poster: 4asjoos
-filtered_data = all_data[all_data['POST_ID'] == '4asjoos']
+filtered_data = all_data[all_data['POST_ID'] == '3a3uk8s']
 # Count the number of positive post labels
 positive_labels_counts = filtered_data[filtered_data['LINK_SENTIMENT'] == 1]['LINK_SENTIMENT'].count()
 print(f"\nNumber of positive post labels from 4asjoos: {positive_labels_counts}")
-

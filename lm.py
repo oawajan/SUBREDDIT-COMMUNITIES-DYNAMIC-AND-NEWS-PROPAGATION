@@ -5,8 +5,8 @@ from sklearn import linear_model
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
-def create_lm():
-    X = subset_data_encoded.drop(columns=['LINK_SENTIMENT', 'POST_ID', 'TIMESTAMP','PROPERTIES','TARGET_SUBREDDIT'])  # Drop non-feature columns
+def create_lm(subset_data_encoded):
+    X = subset_data_encoded.drop(columns=['LINK_SENTIMENT', 'POST_ID', 'TIMESTAMP','PROPERTIES'])  # Drop non-feature columns
     y = subset_data_encoded['LINK_SENTIMENT']
 
     # Split data into training and testing sets
@@ -43,12 +43,12 @@ filtered_data = all_data[(all_data['SOURCE_SUBREDDIT'].isin(top_source_subreddit
 subset_data = filtered_data.sample(frac=1, random_state=42)  #### Change the fraction to change subset size ####
 
 # One-hot encode categorical features
-# subset_data_encoded = pd.get_dummies(subset_data, columns=['SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT'])
-subset_data_encoded = pd.get_dummies(subset_data, columns=['SOURCE_SUBREDDIT'])
+subset_data_encoded = pd.get_dummies(subset_data, columns=['SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT'])
+# subset_data_encoded = pd.get_dummies(subset_data, columns=['SOURCE_SUBREDDIT'])
 
 
 # Remove common prefixes from column names
-subset_data_encoded.columns = subset_data_encoded.columns.str.replace('SOURCE_SUBREDDIT_', '')
+subset_data_encoded.columns = subset_data_encoded.columns.str.replace('SOURCE_SUBREDDIT_', '').str.replace('TARGET_SUBREDDIT_', '')
 
 # Merge columns with the same names
 subset_data_encoded = subset_data_encoded.groupby(level=0, axis=1).sum()
@@ -56,4 +56,4 @@ subset_data_encoded = subset_data_encoded.groupby(level=0, axis=1).sum()
 # Display encoded data
 # print(subset_data_encoded.head())
 
-create_lm()
+create_lm(subset_data_encoded)

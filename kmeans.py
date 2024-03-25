@@ -13,7 +13,7 @@ body = pd.read_csv("data/soc-redditHyperlinks-body.tsv", delimiter="\t")
 all_data = pd.concat([titles, body])
 
 # Extract 'POST_PROPERTIES' as a list feature
-post_properties = all_data['PROPERTIES'].apply(eval)  # Assuming 'POST_PROPERTIES' is a string representation of a list
+post_properties = all_data['PROPERTIES'].apply(eval)  # Assuming 'PROPERTIES' is a string representation of a list
 
 # Convert list feature to DataFrame with each value in the list as a separate column
 post_properties_df = pd.DataFrame(post_properties.tolist(), columns=[f"feature_{i}" for i in range(86)])

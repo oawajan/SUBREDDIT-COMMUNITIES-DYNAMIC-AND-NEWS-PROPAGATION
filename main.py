@@ -90,5 +90,5 @@ G = nx.from_pandas_edgelist(subset_data, 'SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT',
 # Convert to undirected graph
 G_undirected = G.to_undirected()
 
-sklearn_clustering(subset_data)
-# louvian_method()
+# sklearn_clustering(subset_data)
+louvian_method()

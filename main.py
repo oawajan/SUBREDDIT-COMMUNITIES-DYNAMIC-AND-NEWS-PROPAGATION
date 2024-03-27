@@ -87,6 +87,58 @@ def plotcommubnities(df, number):
     grpahcommubnities(df, bars.keys()[0])
 
 
+def grpahallcommubnities(df):
+    communities = df['SOURCE_SUBREDDIT'].unique()
+    option = ['g', 'r', 'b']
+    colors = []
+    node_sizes = []
+
+    comm_graph = nx.DiGraph()
+    for community_1 in communities:
+        comm_graph.add_node(community_1)
+        events = df[(df['SOURCE_SUBREDDIT'] == community_1)]
+        for target in events['TARGET_SUBREDDIT']:
+            comm_graph.add_node(target)
+            comm_graph.add_edge(community_1, target)
+
+            sentiment_counts = events[(events['SOURCE_SUBREDDIT'] == community_1) &
+                                           (events['TARGET_SUBREDDIT'] == target)
+                                           ]['LINK_SENTIMENT'].value_counts()
+            node_sizes.append(sentiment_counts.sum() * 500)
+            comm_graph[community_1][target]['node_size'] = sentiment_counts.sum() * 500
+            comm_graph[community_1][target]['node_width'] = sentiment_counts.values.sum() * 500
+            if len(sentiment_counts) > 1:
+                if sentiment_counts.values[0] > sentiment_counts.values[1]:
+                    weight = sentiment_counts.keys()[0]
+                    if weight == 1:
+                        colors.append(option[0])
+                    else:
+                        colors.append(option[1])
+                else:
+                    weight = 0
+                    colors.append(option[2])
+            else:
+                weight = sentiment_counts.keys()[0]
+                if weight == 1:
+                    colors.append(option[0])
+                else:
+                    colors.append(option[1])
+    plt.figure(3, figsize=(50, 50))
+    pos = nx.spring_layout(G, k=10.5, iterations=20)
+    nx.draw_random(comm_graph, with_labels=True,
+            edge_color=colors,
+            width=1,
+            linewidths=1,
+            node_size=4800,
+            alpha=0.9)
+    red_patch = mpatches.Patch(color='red', label='Conflicting')
+    blue_patch = mpatches.Patch(color='blue', label='Neutral')
+    green_patch = mpatches.Patch(color='green', label='Friendly')
+    plt.legend(handles=[red_patch, blue_patch, green_patch], loc=2, prop={'size': 55})
+    plt.tight_layout()
+    plt.show()
+
+
 def grpahcommubnities(df, source):
     communities = df[df['SOURCE_SUBREDDIT'] == source]
     comm_graph = nx.DiGraph()
@@ -283,7 +335,8 @@ partition = community_louvain.best_partition(G_undirected)
 # nx.draw_networkx_edges(G, pos, alpha=0.3)
 # plt.show()
 
-plotcommubnities(subset_data, 10)
-top_post = plotposts(subset_data, 100)
+#plotcommubnities(subset_data, 10)
+#top_post = plotposts(subset_data, 100)
 # printtimeline(all_data, top_post)
 # print(len(all_data['POST_ID'].unique()), len(all_data['TIMESTAMP'].unique()))
+grpahallcommubnities(subset_data)

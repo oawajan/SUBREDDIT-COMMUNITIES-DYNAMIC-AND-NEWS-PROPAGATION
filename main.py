@@ -16,6 +16,7 @@ def plotcommubnities(df, number):
     plt.tick_params(axis='x', labelrotation=90)
     plt.tight_layout()
     plt.legend()
+    plt.show()
 
     # print top 20 positive subreddits
     positive = df[df['LINK_SENTIMENT'] == 1].value_counts('SOURCE_SUBREDDIT')
@@ -127,7 +128,7 @@ def grpahallcommubnities(df):
     pos = nx.spring_layout(G, k=10.5, iterations=20)
     nx.draw_random(comm_graph, with_labels=True,
             edge_color=colors,
-            width=1,
+            width=4,
             linewidths=1,
             node_size=4800,
             alpha=0.9)
@@ -173,18 +174,19 @@ def grpahcommubnities(df, source):
 
         comm_graph[source][target]['weight'] = weight
 
+    plt.figure(3, figsize=(15, 15))
     pos = nx.spring_layout(comm_graph, k=10)
     nx.draw(comm_graph, with_labels=True,
             edge_color=colors,
-            width=1,
+            width=5,
             linewidths=1,
-            node_size=500,
+            node_size=8000,
             alpha=0.9)
     nx.draw_networkx_edge_labels(comm_graph, edge_labels=labels, pos=pos)
     red_patch = mpatches.Patch(color='red', label='Conflicting')
     blue_patch = mpatches.Patch(color='blue', label='Neutral')
     green_patch = mpatches.Patch(color='green', label='Friendly')
-    plt.legend(handles=[red_patch, blue_patch, green_patch], loc=2, prop={'size': 9})
+    plt.legend(handles=[red_patch, blue_patch, green_patch], loc=2, prop={'size': 23})
     plt.tight_layout()
     plt.show()
 
@@ -251,12 +253,13 @@ def graphpost(df, POST_ID) -> None:
         else:
             colors.append(option[1])
 
+    plt.figure(3, figsize=(50, 50))
     pos = nx.spring_layout(post_graph, k=10)
     nx.draw(post_graph, with_labels=True,
             edge_color=colors,
             width=1,
             linewidths=1,
-            node_size=500,
+            node_size=5000,
             alpha=0.9)
     nx.draw_networkx_edge_labels(post_graph, edge_labels=labels, pos=pos)
     plt.show()
@@ -335,8 +338,8 @@ partition = community_louvain.best_partition(G_undirected)
 # nx.draw_networkx_edges(G, pos, alpha=0.3)
 # plt.show()
 
-#plotcommubnities(subset_data, 10)
-#top_post = plotposts(subset_data, 100)
+plotcommubnities(subset_data, 10)
+#top_post = plotposts(subset_data, 20)
 # printtimeline(all_data, top_post)
 # print(len(all_data['POST_ID'].unique()), len(all_data['TIMESTAMP'].unique()))
 grpahallcommubnities(subset_data)

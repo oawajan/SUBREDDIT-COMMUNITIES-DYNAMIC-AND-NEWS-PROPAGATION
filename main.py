@@ -41,7 +41,6 @@ def plotcommubnities(df, number):
     plt.show()
 
     # print top 20 overall/positive/negative including sentiment
-
     bars = df.value_counts('SOURCE_SUBREDDIT')
     positive = df[df['LINK_SENTIMENT'] == 1].value_counts('SOURCE_SUBREDDIT')
     negative = df[df['LINK_SENTIMENT'] == -1].value_counts('SOURCE_SUBREDDIT')
@@ -105,7 +104,6 @@ def grpahallcommubnities(df):
             sentiment_counts = events[(events['SOURCE_SUBREDDIT'] == community_1) &
                                            (events['TARGET_SUBREDDIT'] == target)
                                            ]['LINK_SENTIMENT'].value_counts()
-            node_sizes.append(sentiment_counts.sum() * 500)
             comm_graph[community_1][target]['node_size'] = sentiment_counts.sum() * 500
             comm_graph[community_1][target]['node_width'] = sentiment_counts.values.sum() * 500
             if len(sentiment_counts) > 1:
@@ -124,6 +122,8 @@ def grpahallcommubnities(df):
                     colors.append(option[0])
                 else:
                     colors.append(option[1])
+    print(type(node_sizes))
+    print(node_sizes)
     plt.figure(3, figsize=(50, 50))
     pos = nx.spring_layout(G, k=10.5, iterations=20)
     nx.draw_random(comm_graph, with_labels=True,

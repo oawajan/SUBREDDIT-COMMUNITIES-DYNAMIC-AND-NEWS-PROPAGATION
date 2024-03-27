@@ -3,6 +3,7 @@ import pandas as pd
 import networkx as nx
 from community import community_louvain 
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 
 def plotcommubnities(df, number):
@@ -128,6 +129,11 @@ def grpahcommubnities(df, source):
             node_size=500,
             alpha=0.9)
     nx.draw_networkx_edge_labels(comm_graph, edge_labels=labels, pos=pos)
+    red_patch = mpatches.Patch(color='red', label='Conflicting')
+    blue_patch = mpatches.Patch(color='blue', label='Neutral')
+    green_patch = mpatches.Patch(color='green', label='Friendly')
+    plt.legend(handles=[red_patch, blue_patch, green_patch], loc=2, prop={'size': 9})
+    plt.tight_layout()
     plt.show()
 
 
@@ -169,8 +175,6 @@ def plotposts(df, number=20):
     graphpost(all_data, bars.keys()[0])
 
 
-
-
 def graphpost(df, POST_ID) -> None:
     post_events = df[df['POST_ID'] == POST_ID]
     source = post_events['SOURCE_SUBREDDIT'].unique()[0]
@@ -205,14 +209,15 @@ def graphpost(df, POST_ID) -> None:
     nx.draw_networkx_edge_labels(post_graph, edge_labels=labels, pos=pos)
     plt.show()
 
-def printtimeline(df, POST_ID):
-    print(POST_ID)
-    post_events = df[df['POST_ID'] == POST_ID]
-    post_events['TIMESTAMP'] = pd.to_datetime(post_events['TIMESTAMP'])
-    # print(post_events['TIMESTAMP'].unique())
-    print(post_events[['TIMESTAMP', 'SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT']])
-    # print(len(df['TIMESTAMP'].unique()))
-    # print(post_events[:5][['SOURCE_SUBREDDIT', 'TARGET_SUBBREDDIT', 'TIMESTAMP']])
+
+# def printtimeline(df, POST_ID):
+#     print(POST_ID)
+#     post_events = df[df['POST_ID'] == POST_ID]
+#     post_events['TIMESTAMP'] = pd.to_datetime(post_events['TIMESTAMP'])
+#     # print(post_events['TIMESTAMP'].unique())
+#     print(post_events[['TIMESTAMP', 'SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT']])
+#     # print(len(df['TIMESTAMP'].unique()))
+#     # print(post_events[:5][['SOURCE_SUBREDDIT', 'TARGET_SUBBREDDIT', 'TIMESTAMP']])
 
 
 # Load data

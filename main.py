@@ -265,16 +265,6 @@ def graphpost(df, POST_ID) -> None:
     plt.show()
 
 
-# def printtimeline(df, POST_ID):
-#     print(POST_ID)
-#     post_events = df[df['POST_ID'] == POST_ID]
-#     post_events['TIMESTAMP'] = pd.to_datetime(post_events['TIMESTAMP'])
-#     # print(post_events['TIMESTAMP'].unique())
-#     print(post_events[['TIMESTAMP', 'SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT']])
-#     # print(len(df['TIMESTAMP'].unique()))
-#     # print(post_events[:5][['SOURCE_SUBREDDIT', 'TARGET_SUBBREDDIT', 'TIMESTAMP']])
-
-
 # Load data
 titles = pd.read_csv("data/soc-redditHyperlinks-title.tsv", delimiter="\t")
 body = pd.read_csv("data/soc-redditHyperlinks-body.tsv", delimiter="\t")

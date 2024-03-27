@@ -15,7 +15,6 @@ def plotcommubnities(df, number):
     plt.tick_params(axis='x', labelrotation=90)
     plt.tight_layout()
     plt.legend()
-    plt.show()
 
     # print top 20 positive subreddits
     positive = df[df['LINK_SENTIMENT'] == 1].value_counts('SOURCE_SUBREDDIT')
@@ -66,9 +65,9 @@ def plotcommubnities(df, number):
     for subreddit in list(subset_bars.keys()):
         # pos = subset_data[subset_data['SOURCE_SUBREDDIT'] == subreddit].value_counts('LINK_SENTIMENT')
         positive.append(df[(df['SOURCE_SUBREDDIT'] == subreddit) &
-                                    (df['LINK_SENTIMENT'] == 1)].shape[0])
+                        (df['LINK_SENTIMENT'] == 1)].shape[0])
         negative.append(df[(df['SOURCE_SUBREDDIT'] == subreddit) &
-                                    (df['LINK_SENTIMENT'] == -1)].shape[0])
+                        (df['LINK_SENTIMENT'] == -1)].shape[0])
         subreddits.append(subreddit)
 
     plt.bar(indexes - width, subset_bars.values[:number], width=width, label="overall", edgecolor='#008fd5')
@@ -84,8 +83,55 @@ def plotcommubnities(df, number):
     plt.legend()
     plt.show()
 
+    grpahcommubnities(df, bars.keys()[0])
 
-def plotposts(df, number=20) -> str:
+
+def grpahcommubnities(df, source):
+    communities = df[df['SOURCE_SUBREDDIT'] == source]
+    comm_graph = nx.DiGraph()
+    comm_graph.add_node(source)
+    option = ['g', 'r', 'b']
+    colors = []
+    # add link sentiment as edge weight
+    labels = {}
+    for target in communities['TARGET_SUBREDDIT']:
+        comm_graph.add_node(target)
+        comm_graph.add_edge(source, target)
+
+        sentiment_counts = communities[(communities['SOURCE_SUBREDDIT'] == source) &
+                                       (communities['TARGET_SUBREDDIT'] == target)
+                                       ]['LINK_SENTIMENT'].value_counts()
+        if len(sentiment_counts) > 1:
+            if sentiment_counts.values[0] > sentiment_counts.values[1]:
+                weight = sentiment_counts.keys()[0]
+                if weight == 1:
+                    colors.append(option[0])
+                else:
+                    colors.append(option[1])
+            else:
+                weight = 0
+                colors.append(option[2])
+        else:
+            weight = sentiment_counts.keys()[0]
+            if weight == 1:
+                colors.append(option[0])
+            else:
+                colors.append(option[1])
+
+        comm_graph[source][target]['weight'] = weight
+
+    pos = nx.spring_layout(comm_graph, k=10)
+    nx.draw(comm_graph, with_labels=True,
+            edge_color=colors,
+            width=1,
+            linewidths=1,
+            node_size=500,
+            alpha=0.9)
+    nx.draw_networkx_edge_labels(comm_graph, edge_labels=labels, pos=pos)
+    plt.show()
+
+
+def plotposts(df, number=20):
     # print top 20
     bars = df.value_counts('POST_ID')
     plt.bar(bars.keys()[:number], bars.values[:number], width=1, label="overall", edgecolor='black')
@@ -95,28 +141,68 @@ def plotposts(df, number=20) -> str:
     plt.tick_params(axis='x', labelrotation=90)
     plt.tight_layout()
     plt.show()
-    return bars.keys()[0]
+
+    graphpost(all_data, bars.keys()[0])
+
+    # print top 20 positive
+    bars = df[df['LINK_SENTIMENT'] == 1].value_counts('POST_ID')
+    plt.bar(bars.keys()[:number], bars.values[:number], width=1, label="overall", edgecolor='black')
+    plt.title(f"Top {number} positive Propagated Posts")
+    plt.xlabel("Posts_ID")
+    plt.ylabel("Frequency")
+    plt.tick_params(axis='x', labelrotation=90)
+    plt.tight_layout()
+    plt.show()
+
+    graphpost(all_data, bars.keys()[0])
+
+    # print top 20 negative
+    bars = df[df['LINK_SENTIMENT'] == -1].value_counts('POST_ID')
+    plt.bar(bars.keys()[:number], bars.values[:number], width=1, label="overall", edgecolor='black')
+    plt.title(f"Top {number} negative Propagated Posts")
+    plt.xlabel("Posts_ID")
+    plt.ylabel("Frequency")
+    plt.tick_params(axis='x', labelrotation=90)
+    plt.tight_layout()
+    plt.show()
+
+    graphpost(all_data, bars.keys()[0])
 
 
-def plotpostgraph(df, POST_ID) -> None:
+
+
+def graphpost(df, POST_ID) -> None:
     post_events = df[df['POST_ID'] == POST_ID]
-    print(len(post_events['SOURCE_SUBREDDIT'].unique()))
-    print(len(post_events['TARGET_SUBREDDIT'].unique()))
-    print(len(post_events))
     source = post_events['SOURCE_SUBREDDIT'].unique()[0]
     post_graph = nx.DiGraph()
     post_graph.add_node(source)
+    color_list = []
+    # add coloring to edges based on sentiment
+    option = ['g', 'r']
+    colors = []
+    # add link sentiment as edge weight
+    labels = {}
+
     for target in post_events['TARGET_SUBREDDIT']:
         post_graph.add_edge(source, target)
         post_graph[source][target]['weight'] = post_events[(post_events['SOURCE_SUBREDDIT'] == source) &
                                                            (post_events['TARGET_SUBREDDIT'] == target)
                                                            ]['LINK_SENTIMENT'].values[0]
-    nx.draw(post_graph, with_labels=True, node_size=500)
-    labels = {}
     for e in post_graph.edges:
         labels[e] = post_graph.edges[e]['weight']
+        if labels[e] == 1:
+            colors.append(option[0])
+        else:
+            colors.append(option[1])
+
     pos = nx.spring_layout(post_graph, k=10)
-    nx.draw_networkx_edge_labels(G, edge_labels=labels, pos=pos)
+    nx.draw(post_graph, with_labels=True,
+            edge_color=colors,
+            width=1,
+            linewidths=1,
+            node_size=500,
+            alpha=0.9)
+    nx.draw_networkx_edge_labels(post_graph, edge_labels=labels, pos=pos)
     plt.show()
 
 
@@ -193,8 +279,7 @@ partition = community_louvain.best_partition(G_undirected)
 # nx.draw_networkx_edges(G, pos, alpha=0.3)
 # plt.show()
 
-# plotcommubnities(all_data, 10)
-top_post = plotposts(all_data, 20)
+plotcommubnities(subset_data, 10)
+top_post = plotposts(subset_data, 100)
 # printtimeline(all_data, top_post)
-plotpostgraph(all_data, top_post)
 # print(len(all_data['POST_ID'].unique()), len(all_data['TIMESTAMP'].unique()))

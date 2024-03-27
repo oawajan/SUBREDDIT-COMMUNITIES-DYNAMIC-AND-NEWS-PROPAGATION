@@ -205,7 +205,6 @@ def graphpost(df, POST_ID) -> None:
     nx.draw_networkx_edge_labels(post_graph, edge_labels=labels, pos=pos)
     plt.show()
 
-
 def printtimeline(df, POST_ID):
     print(POST_ID)
     post_events = df[df['POST_ID'] == POST_ID]

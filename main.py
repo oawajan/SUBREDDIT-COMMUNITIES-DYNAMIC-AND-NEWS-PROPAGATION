@@ -84,10 +84,10 @@ def plotcommubnities(df, number):
     plt.legend()
     plt.show()
 
-    grpahcommubnities(df, bars.keys()[0])
+    graphcommubnities(df, bars.keys()[0])
 
 
-def grpahallcommubnities(df):
+def graphallcommubnities(df):
     communities = df['SOURCE_SUBREDDIT'].unique()
     option = ['g', 'r', 'b']
     colors = []

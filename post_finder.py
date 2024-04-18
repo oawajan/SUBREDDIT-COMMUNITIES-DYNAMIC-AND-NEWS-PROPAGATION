@@ -32,8 +32,6 @@ def find_links_in_string(input_string):
     return matches
 
 def extract_post_id(url):
-    # Extract post ID from the Reddit URL
-    # Assuming the format is "https://www.reddit.com/r/subreddit/comments/postID/title/"
     # Split the URL and get the post ID
     parts = url.split('/')
     return parts[-3] if len(parts) >= 7 else None

@@ -7,7 +7,7 @@ def iterate_through_lines_csv(csv_file):
     matching_post_id = []
     lines=[]
     target_post_ids=[]
-    with open(csv_file, 'r', newline='') as file:
+    with open(csv_file, 'r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
         next(reader)
         try:

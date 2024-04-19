@@ -13,11 +13,11 @@ def iterate_through_lines_csv(csv_file):
         try:
             for line in reader:
                 post_ids = line[4].split('/')[6]  # Extract post IDs
-                links = find_links_in_string(line[5])  # Extract links from the 6th column
-                target_post_ids_for_current_post = [extract_post_id(link) for link in links]
-                if find_links_in_string(line[5]):  # If links are present in the text  # If links are present in the text
+                if find_links_in_string(line[5]) or find_links_in_string(line[1]):  # If links are present in the text or title
                     matching_post_id.append(post_ids)  # Store only the post IDs
                     lines.append(line)
+                    links = find_links_in_string(line[5])  # Extract links from the text
+                    target_post_ids_for_current_post = [extract_post_id(link) for link in links]
                     target_post_ids.append(target_post_ids_for_current_post)
         except csv.Error as e:
             print('Error:', e)

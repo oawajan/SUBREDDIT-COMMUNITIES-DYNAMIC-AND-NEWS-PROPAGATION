@@ -15,7 +15,7 @@ def iterate_through_lines_csv(csv_file):
                 post_ids = line[4].split('/')[6]  # Extract post IDs
                 links = find_links_in_string(line[5])  # Extract links from the 6th column
                 target_post_ids_for_current_post = [extract_post_id(link) for link in links]
-                if find_links_in_string(line[5]):  # If links are present in the text
+                if find_links_in_string(line[5]):  # If links are present in the text  # If links are present in the text
                     matching_post_id.append(post_ids)  # Store only the post IDs
                     lines.append(line)
                     target_post_ids.append(target_post_ids_for_current_post)
@@ -48,22 +48,21 @@ while True:
     except OverflowError:
         maxInt = int(maxInt/10)
 
-csv_file = 'data/zst_as_csv.csv'
-matching_post_ids, lines, target_post_ids= iterate_through_lines_csv(csv_file)
-
-
-actual_df=pd.DataFrame(lines)
-actual_df['POST_ID'] = matching_post_ids
-actual_df['TARGET_POST_IDS'] = target_post_ids
 
 # Load body DataFrame
-
 titles = pd.read_csv("data/soc-redditHyperlinks-title.tsv", delimiter="\t")
 body = pd.read_csv("data/soc-redditHyperlinks-body.tsv", delimiter="\t")
 
 all_data = pd.concat([titles, body])
 
 all_data=all_data.drop('TIMESTAMP', axis='columns')
+
+csv_file = 'data/zst_as_csv.csv'
+matching_post_ids, lines, target_post_ids= iterate_through_lines_csv(csv_file)
+
+actual_df=pd.DataFrame(lines)
+actual_df['POST_ID'] = matching_post_ids
+actual_df['TARGET_POST_IDS'] = target_post_ids
 
 matching_posts = all_data[all_data['POST_ID'].isin(matching_post_ids)].reset_index()
 
@@ -72,6 +71,5 @@ merged_df = pd.merge(matching_posts, actual_df, on='POST_ID', how='left')
 new_column_names = {0: 'AUTHOR', 1: 'TITLE', 2: 'SCORE', 3:'TIMESTAMP',4: 'LINK', 5: 'TEXT', 6: 'URL'}
 merged_df=merged_df.rename(columns=new_column_names)
 merged_df=merged_df.drop(['index','PROPERTIES','LINK'],axis='columns')
-merged_df=merged_df.drop_duplicates()
 
 merged_df.to_csv('data/out.csv', index=True, mode='a') 

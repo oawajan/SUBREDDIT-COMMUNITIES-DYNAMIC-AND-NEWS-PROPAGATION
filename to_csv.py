@@ -17,7 +17,7 @@ import logging.handlers
 
 
 # put the path to the input file
-input_file_path = r"data/reddit/submissions/RS_2014-06.zst"
+input_file_path = r"data/reddit/submissions/RS_2014-01.zst"
 # put the path to the output file, with the csv extension
 output_file_path = r"data/zst_as_csv.csv"
 # if you want a custom set of fields, put them in the following list. If you leave it empty the script will use a default set of fields

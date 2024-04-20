@@ -51,11 +51,14 @@ def prepare_text_for_lda(text):
 
 text_data = []
 df = pd.read_csv('data/out.csv')
-for line in df['TEXT']:
-    if isinstance(line, str):
-        tokens = prepare_text_for_lda(line)
-        if random.random() > .99:
-            text_data.append(tokens)
+
+for index, row in df.iterrows():
+    # sentiment = int(row['LINK_SENTIMENT'])
+    item = row['SOURCE_SUBREDDIT']
+    if isinstance(row['TEXT'], str) and item == 'subredditdramas':
+        tokens = prepare_text_for_lda(row['TEXT'])
+        text_data.append(tokens)
+
 
 
 
@@ -64,7 +67,7 @@ corpus = [dictionary.doc2bow(text) for text in text_data]
 pickle.dump(corpus, open('corpus.pkl', 'wb'))
 dictionary.save('data/dictionary.gensim')
 
-NUM_TOPICS = 10
+NUM_TOPICS = 5
 ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics = NUM_TOPICS, id2word=dictionary, passes=15)
 ldamodel.save('data/model5.gensim')
 topics = ldamodel.print_topics(num_words=4)

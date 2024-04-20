@@ -1,5 +1,6 @@
 import subprocess
 import os
+import pandas as pd
 
 def run_script(script_name,args=''):
     try:
@@ -60,3 +61,8 @@ for i in filenames:
     args=[f'data/reddit/submissions/{i}','data/zst_as_csv.csv','author,title,score,created,link,text,url']
     run_script('to_csv.py',args)
     run_script('post_finder_V2.py')
+
+df=pd.read_csv('data/out_V2.csv')
+values_to_drop = ['LINK_SENTIMENT']  # Specify the values you want to drop
+df_filtered = df[~df['LINK_SENTIMENT'].isin(values_to_drop)]
+df_filtered.to_csv('data/out.csv', index=False) 

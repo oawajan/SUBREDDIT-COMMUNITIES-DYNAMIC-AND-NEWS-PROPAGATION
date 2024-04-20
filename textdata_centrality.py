@@ -60,7 +60,57 @@ def cluster(df):
 
 def keyword_finder(df, n=10):
     text_data = df['TEXT']
-    tfidf_vectorizer = TfidfVectorizer(stop_words='english', max_features=1000)
+    word_list = [
+    'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', "aren't", 'as', 'at',
+    'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', "can't", 'com', 'could',
+    "couldn't", 'did', "didn't", 'do', 'does', "doesn't", 'doing', "don't", 'down', 'during', 'each', 'few', 'for',
+    'from', 'further', 'had', "hadn't", 'has', "hasn't", 'have', "haven't", 'having', 'he', "he'd", "he'll", "he's",
+    'her', 'here', "here's", 'hers', 'herself', 'him', 'himself', 'his', 'how', "how's", 'https', 'i', "i'd", "i'll",
+    "i'm", "i've", 'if', 'in', 'into', 'is', "isn't", 'it', "it's", 'its', 'itself', 'just', 'like', 'me', 'more',
+    'most', 'my', 'myself', 'no', 'nor', 'not', 'now', 'of', 'off', 'on', 'once', 'only', 'or', 'other', 'ought',
+    'our', 'ours', 'ourselves', 'out', 'over', 'own', 'same', "shan't", 'she', "she'd", "she'll", "she's", 'should',
+    "shouldn't", 'so', 'some', 'such', 'than', 'that', "that's", 'the', 'their', 'theirs', 'them', 'themselves',
+    'then', 'there', "there's", 'these', 'they', "they'd", "they'll", "they're", "they've", 'this', 'those', 'through',
+    'to', 'too', 'under', 'until', 'up', 'url', 'very', 'was', "wasn't", 'we', "we'd", "we'll", "we're", "we've",
+    'were', "weren't", 'what', "what's", 'when', "when's", 'where', "where's", 'which', 'while', 'who', "who's",
+    'whom', 'why', "why's", 'with', "won't", 'would', "wouldn't", 'www', 'you', "you'd", "you'll", "you're", "you've",
+    'your', 'yours', 'yourself', 'yourselves', 'things', 'new', 'shit', 'fucking', 'many', 'anyone', 'feel', 'guy', 'take'
+    'reddit', 'subreddit', 'post', 'comment', 'comments', 'thread', 'threads', 'upvote', 'downvote', 'karma',
+    'user', 'users', 'account', 'accounts', 'moderator', 'moderators', 'subscribers', 'subscribe', 'subscribed',
+    'subscribe', 'unsubscribe', 'unsubscribe', 'repost', 'reposts', 'crosspost', 'crossposted', 'crossposting',
+    'original', 'source', 'sources', 'link', 'links', 'website', 'websites', 'article', 'articles', 'blog', 'blogs',
+    'video', 'videos', 'image', 'images', 'picture', 'pictures', 'photo', 'photos', 'gif', 'gifs', 'title', 'titles',
+    'text', 'body', 'content', 'post', 'posts', 'thread', 'threads', 'comment', 'comments', 'reply', 'replies',
+    'discussion', 'discussions', 'question', 'questions', 'answer', 'answers', 'ask', 'asking', 'asked', 'answered',
+    'opinion', 'opinions', 'thought', 'thoughts', 'idea', 'ideas', 'thoughtful', 'help', 'advice', 'suggestion',
+    'suggestions', 'recommendation', 'recommendations', 'tip', 'tips', 'trick', 'tricks', 'tip', 'tips', 'guide',
+    'guides', 'tutorial', 'tutorials', 'information', 'info', 'news', 'update', 'updates', 'announcement',
+    'announcements', 'event', 'events', 'announcement', 'announcements', 'important', 'community', 'communities',
+    'user', 'users', 'member', 'members', 'audience', 'readers', 'viewer', 'viewers', 'follower', 'followers',
+    'subscriber', 'subscribers', 'participant', 'participants', 'visitor', 'visitors', 'guest', 'guests',
+    'membership', 'experience', 'insight', 'insights', 'perspective', 'perspectives', 'viewpoint', 'viewpoints',
+    'suggestion', 'suggestions', 'feedback', 'commentary', 'discussion', 'discussions', 'interaction', 'interactions',
+    'engagement', 'conversation', 'conversations', 'dialogue', 'dialogues', 'chat', 'chats', 'message', 'messages',
+    'reply', 'replies', 'response', 'responses', 'interaction', 'interactions', 'thread', 'threads', 'topic',
+    'topics', 'theme', 'themes', 'subject', 'subjects', 'content', 'content', 'post', 'posts', 'submission',
+    'submissions', 'submission', 'submissions', 'share', 'sharing', 'sharing', 'sharing', 'read', 'reading', 'readership',
+    'reader', 'readers', 'view', 'viewing', 'viewer', 'viewers', 'viewing', 'viewings', 'visit', 'visiting', 'visitors',
+    'visit', 'visits', 'traffic', 'visitor', 'visitors', 'traffic', 'visit', 'visits', 'visit', 'visits', 'click',
+    'clicks', 'click', 'clicks', 'vote', 'voting', 'voted', 'votes', 'like', 'likes', 'liked', 'liking', 'dislike',
+    'dislikes', 'disliked', 'disliking', 'upvote', 'upvotes', 'upvoted', 'upvoting', 'downvote', 'downvotes',
+    'downvoted', 'downvoting', 'subscribe', 'subscribes', 'subscribed', 'subscribing', 'unsubscribe', 'unsubscribes',
+    'unsubscribed', 'unsubscribing', 'reply', 'replies', 'replied', 'replying', 'mention', 'mentions', 'mentioned',
+    'mentioning', 'tag', 'tags', 'tagged', 'tagging', 'follow', 'follows', 'http', 'https', 'com', 'org', 'www', 
+    'reddit', 'comment', 'post', 'gt', 'one', 'get', 'don', 'comments', 've', 'amp', 'thread', 'even', 'will', 'people',
+    'know', 're', 'aren', 'couldn', 'didn', 'doesn', 'hadn', 'hasn', 'haven', 'isn', 'll', 'shan', 'shouldn', 'wasn',
+    'weren', 'won', 'wouldn', 'context', 'time', 'think','imgur', 'also', 'really', 'see', 'want', 'np', 'make', 'got',
+    'made', 'go', 'edit', 'something','much', 'good', 'right', 'us', 'way', 'someone', 'first', 'going', 'game', 'back',
+    'sub', 'well', 'thing', 'still', 'posted', 'said', 'say', 'day','need', 'anything', 'another', 'please', 'look', 'lot',
+    'find', 'take', 'two', 'use', 'let', 'every', 'found', 'around', 'sure', 'since', 'never', 'actually', 'person', 'guys',
+    'ago', 
+    ]
+
+    tfidf_vectorizer = TfidfVectorizer(stop_words=word_list, max_features=1000)
     tfidf_matrix = tfidf_vectorizer.fit_transform(text_data)
     feature_names = tfidf_vectorizer.get_feature_names_out()
     tfidf_scores = tfidf_matrix.toarray()
@@ -72,7 +122,8 @@ def keyword_finder(df, n=10):
     for i, post in enumerate(text_data):
         for idx, score in enumerate(tfidf_scores[i]):
             keyword = feature_names[idx].lower()  # Convert to lowercase for case insensitivity
-            keyword_scores[keyword] += score
+            if keyword not in word_list:  # Ignore NLTK stopwords
+                keyword_scores[keyword] += score
 
     # Sort the words based on their total TF-IDF scores
     sorted_keywords = sorted(keyword_scores.items(), key=lambda x: x[1], reverse=True)
@@ -86,7 +137,7 @@ def keyword_finder(df, n=10):
 df = pd.read_csv('data/out.csv')
 df = df.dropna()
 G = nx.from_pandas_edgelist(df, 'SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT', create_using=nx.DiGraph())
-top_keywords = keyword_finder(df, n=10)
+top_keywords = keyword_finder(df, n=20)
 for keyword, score in top_keywords:
     print(f"Keyword: {keyword}, Total TF-IDF Score: {score}")
 

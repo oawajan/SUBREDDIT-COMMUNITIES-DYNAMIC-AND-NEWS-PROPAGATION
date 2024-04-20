@@ -16,10 +16,10 @@ def extract_post_id(link):
 
 actual_data['POST_ID'] = actual_data['link'].apply(extract_post_id)
 
-merged_df = pd.merge(all_data, actual_data, on='POST_ID', how='left')
+merged_df = pd.merge(all_data, actual_data, on='POST_ID', how='inner')
 
-new_column_names = {0: 'AUTHOR', 1: 'TITLE', 2: 'SCORE', 3:'TIMESTAMP',4: 'LINK', 5: 'TEXT', 6: 'URL'}
-merged_df=merged_df.rename(columns=new_column_names)
-# merged_df=merged_df.drop(['index','PROPERTIES',''],axis='columns')
+# new_column_names = {0: 'AUTHOR', 1: 'TITLE', 2: 'SCORE', 3:'TIMESTAMP',4: 'LINK', 5: 'TEXT', 6: 'URL'}
+# merged_df=merged_df.rename(columns=new_column_names)
+merged_df=merged_df.drop(['PROPERTIES'],axis='columns')
 
 merged_df.to_csv('data/out_V2.csv', index=True, mode='a') 

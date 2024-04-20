@@ -54,9 +54,9 @@ filenames = [
 ]
 
 
-os.system("del data/out.csv")
+os.system("del data/out_V2.csv")
 
 for i in filenames:
     args=[f'data/reddit/submissions/{i}','data/zst_as_csv.csv','author,title,score,created,link,text,url']
     run_script('to_csv.py',args)
-    run_script('post_finder.py')
+    run_script('post_finder_V2.py')

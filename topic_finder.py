@@ -55,7 +55,7 @@ df = pd.read_csv('data/out.csv')
 for index, row in df.iterrows():
     # sentiment = int(row['LINK_SENTIMENT'])
     item = row['SOURCE_SUBREDDIT']
-    if isinstance(row['TEXT'], str) and item == 'subredditdramas':
+    if isinstance(row['TEXT'], str):# and item == 'subredditdramas':
         tokens = prepare_text_for_lda(row['TEXT'])
         text_data.append(tokens)
 

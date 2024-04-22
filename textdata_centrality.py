@@ -134,10 +134,13 @@ def keyword_finder(df, n=10):
 
 ############## MAIN ############## 
 
-df = pd.read_csv('data/out.csv')
+df = pd.read_csv('data/out.csv',low_memory=False)
 df = df.dropna()
-G = nx.from_pandas_edgelist(df, 'SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT', create_using=nx.DiGraph())
-top_keywords = keyword_finder(df, n=20)
-for keyword, score in top_keywords:
-    print(f"Keyword: {keyword}, Total TF-IDF Score: {score}")
+subset_data = df.sample(frac=0.01, random_state=42)
+
+cluster(subset_data)
+# G = nx.from_pandas_edgelist(df, 'SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT', create_using=nx.DiGraph())
+# top_keywords = keyword_finder(df, n=20)
+# for keyword, score in top_keywords:
+#     print(f"Keyword: {keyword}, Total TF-IDF Score: {score}")
 

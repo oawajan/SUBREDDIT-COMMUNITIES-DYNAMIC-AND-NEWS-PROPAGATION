@@ -7,6 +7,8 @@ def iterate_through_lines_csv(csv_file):
     matching_post_id = []
     lines=[]
     target_post_ids=[]
+    source_subreddits = []
+    target_subreddits = []
     with open(csv_file, 'r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file)
         next(reader)
@@ -14,14 +16,19 @@ def iterate_through_lines_csv(csv_file):
             for line in reader:
                 post_ids = line[4].split('/')[6]  # Extract post IDs
                 if find_links_in_string(line[5]) or find_links_in_string(line[1]):  # If links are present in the text or title
-                    matching_post_id.append(post_ids)  # Store only the post IDs
-                    lines.append(line)
+                    
                     links = find_links_in_string(line[5])  # Extract links from the text
                     target_post_ids_for_current_post = [extract_post_id(link) for link in links]
-                    target_post_ids.append(target_post_ids_for_current_post)
+                    if target_post_ids_for_current_post != [None]:
+                        matching_post_id.append(post_ids)  # Store only the post IDs
+                        lines.append(line)
+                        target_post_ids.append(target_post_ids_for_current_post)
+                        source_subreddits.append(extract_subreddit(line[4]))
+                        target_subreddits_for_curr=[extract_subreddit(link) for link in links]
+                        target_subreddits.append(target_subreddits_for_curr)
         except csv.Error as e:
             print('Error:', e)
-    return matching_post_id, lines, target_post_ids
+    return matching_post_id, lines, target_post_ids, source_subreddits, target_subreddits
 
 def find_links_in_string(input_string):
     # Regular expression pattern to match URLs
@@ -35,6 +42,11 @@ def extract_post_id(url):
     # Split the URL and get the post ID
     parts = url.split('/')
     return parts[-3] if len(parts) >= 7 else None
+
+def extract_subreddit(url):
+    # Split the URL and get the post ID
+    parts = url.split('/')
+    return parts[-5] if len(parts) >= 7 else None
 
 ############ MAIN ############
 maxInt = sys.maxsize
@@ -50,26 +62,27 @@ while True:
 
 
 # Load body DataFrame
-titles = pd.read_csv("data/soc-redditHyperlinks-title.tsv", delimiter="\t")
-body = pd.read_csv("data/soc-redditHyperlinks-body.tsv", delimiter="\t")
+# titles = pd.read_csv("data/soc-redditHyperlinks-title.tsv", delimiter="\t")
+# body = pd.read_csv("data/soc-redditHyperlinks-body.tsv", delimiter="\t")
 
-all_data = pd.concat([titles, body])
-
-all_data=all_data.drop('TIMESTAMP', axis='columns')
+# all_data = pd.concat([titles, body])
+# all_data=all_data.drop('TIMESTAMP', axis='columns')
 
 csv_file = 'data/zst_as_csv.csv'
-matching_post_ids, lines, target_post_ids= iterate_through_lines_csv(csv_file)
+matching_post_ids, lines, target_post_ids, source_sub, target_subs = iterate_through_lines_csv(csv_file)
 
 actual_df=pd.DataFrame(lines)
 actual_df['POST_ID'] = matching_post_ids
 actual_df['TARGET_POST_IDS'] = target_post_ids
+actual_df['SOURCE_SUBREDDIT'] = source_sub
+actual_df['TARGET_SUBREDDITS'] = target_subs
 
-matching_posts = all_data[all_data['POST_ID'].isin(matching_post_ids)].reset_index()
+# matching_posts = all_data[all_data['POST_ID'].isin(matching_post_ids)].reset_index()
 
-merged_df = pd.merge(matching_posts, actual_df, on='POST_ID', how='left')
+# merged_df = pd.merge(matching_posts, actual_df, on='POST_ID', how='left')
 
 new_column_names = {0: 'AUTHOR', 1: 'TITLE', 2: 'SCORE', 3:'TIMESTAMP',4: 'LINK', 5: 'TEXT', 6: 'URL'}
-merged_df=merged_df.rename(columns=new_column_names)
-merged_df=merged_df.drop(['index','PROPERTIES','LINK'],axis='columns')
+actual_df=actual_df.rename(columns=new_column_names)
+# merged_df=merged_df.drop(['index','PROPERTIES','LINK'],axis='columns')
 
-merged_df.to_csv('data/out.csv', index=True, mode='a') 
+actual_df.to_csv('data/out.csv', index=True, mode='a') 

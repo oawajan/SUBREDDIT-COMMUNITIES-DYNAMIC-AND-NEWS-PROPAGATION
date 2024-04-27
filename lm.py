@@ -5,6 +5,7 @@ from sklearn import linear_model
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
+import matplotlib.pyplot as plt
 
 def create_lm(subset_data_encoded):
     X = subset_data_encoded.drop(columns=['LINK_SENTIMENT', 'POST_ID', 'TIMESTAMP','PROPERTIES'])  # Drop non-feature columns
@@ -20,9 +21,22 @@ def create_lm(subset_data_encoded):
     # Make predictions
     y_pred = model.predict(X_test)
 
+    residuals = y_test - y_pred
+
+    # Plot residuals
+    plt.scatter(y_pred, residuals)
+    plt.xlabel('Predicted values')
+    plt.ylabel('Residuals')
+    plt.title('Residual Plot')
+    plt.show()
+
     # Calculate accuracy
     accuracy = accuracy_score(y_test, y_pred)
     print(f"Accuracy: {accuracy}")
+
+    feature_importance = pd.Series(model.coef_, index=X.columns).abs().sort_values(ascending=False)
+    print("Feature Importance:")
+    print(feature_importance)
 
 def create_rand_forest(subset_data_encoded):
     X = subset_data_encoded.drop(columns=['LINK_SENTIMENT','POST_ID','TIMESTAMP','PROPERTIES'])

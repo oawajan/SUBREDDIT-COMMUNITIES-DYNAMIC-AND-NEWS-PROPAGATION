@@ -38,7 +38,7 @@ def get_centrality(G):
 
 
 def cluster(df):
-    text_data = df['TEXT']
+    text_data = df['text']
     vectorizer = TfidfVectorizer(max_features=1000)  # You can adjust max_features as needed
     tfidf_matrix = vectorizer.fit_transform(text_data)
     pca = PCA(n_components=2)
@@ -59,7 +59,7 @@ def cluster(df):
     plt.show()
 
 def keyword_finder(df, n=10):
-    text_data = df['TEXT']
+    text_data = df['text']
     word_list = [
     'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', "aren't", 'as', 'at',
     'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', "can't", 'com', 'could',
@@ -74,7 +74,7 @@ def keyword_finder(df, n=10):
     'to', 'too', 'under', 'until', 'up', 'url', 'very', 'was', "wasn't", 'we', "we'd", "we'll", "we're", "we've",
     'were', "weren't", 'what', "what's", 'when', "when's", 'where', "where's", 'which', 'while', 'who', "who's",
     'whom', 'why', "why's", 'with', "won't", 'would', "wouldn't", 'www', 'you', "you'd", "you'll", "you're", "you've",
-    'your', 'yours', 'yourself', 'yourselves', 'things', 'new', 'shit', 'fucking', 'many', 'anyone', 'feel', 'guy', 'take'
+    'your', 'yours', 'yourself', 'yourselves', 'things', 'new', 'many', 'anyone', 'feel', 'guy', 'take'
     'reddit', 'subreddit', 'post', 'comment', 'comments', 'thread', 'threads', 'upvote', 'downvote', 'karma',
     'user', 'users', 'account', 'accounts', 'moderator', 'moderators', 'subscribers', 'subscribe', 'subscribed',
     'subscribe', 'unsubscribe', 'unsubscribe', 'repost', 'reposts', 'crosspost', 'crossposted', 'crossposting',
@@ -106,7 +106,7 @@ def keyword_finder(df, n=10):
     'weren', 'won', 'wouldn', 'context', 'time', 'think','imgur', 'also', 'really', 'see', 'want', 'np', 'make', 'got',
     'made', 'go', 'edit', 'something','much', 'good', 'right', 'us', 'way', 'someone', 'first', 'going', 'game', 'back',
     'sub', 'well', 'thing', 'still', 'posted', 'said', 'say', 'day','need', 'anything', 'another', 'please', 'look', 'lot',
-    'find', 'take', 'two', 'use', 'let', 'every', 'found', 'around', 'sure', 'since', 'never', 'actually', 'person', 'guys',
+    'find', 'take', 'two', 'use', 'let', 'every', 'found', 'around', 'sure', 'since', 'never', 'actually', 'guys',
     'ago', 
     ]
 
@@ -134,13 +134,14 @@ def keyword_finder(df, n=10):
 
 ############## MAIN ############## 
 
-df = pd.read_csv('data/out.csv',low_memory=False)
+df = pd.read_csv('data/out_V2.csv',low_memory=False)
 df = df.dropna()
-subset_data = df.sample(frac=0.01, random_state=42)
+# subset_data = df.sample(frac=0.01, random_state=42)
 
-cluster(subset_data)
-# G = nx.from_pandas_edgelist(df, 'SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT', create_using=nx.DiGraph())
-# top_keywords = keyword_finder(df, n=20)
-# for keyword, score in top_keywords:
-#     print(f"Keyword: {keyword}, Total TF-IDF Score: {score}")
-
+# cluster(subset_data)
+G = nx.from_pandas_edgelist(df, 'SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT', create_using=nx.DiGraph())
+top_keywords = keyword_finder(df, n=20)
+print('\n')
+for keyword, score in top_keywords:
+    print(f"Keyword: {keyword}, Total TF-IDF Score: {score}")
+print('\n')

@@ -1,3 +1,6 @@
+import collections
+
+import community
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -5,42 +8,358 @@ from community import community_louvain
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import pygraphviz as pgv
+import math
 import os
-#from "1_graph_tool".all import *
+from collections import defaultdict
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 
-# def gt_graph(df) -> None:
-#     comm_graph = Graph(directed=True)
-#     communities = df['SOURCE_SUBREDDIT'].unique()
-#     for community_1 in communities:
-#         events = df[(df['SOURCE_SUBREDDIT'] == community_1)]
-#         comm_graph.add_vertex(community_1)
-#         for target in events['TARGET_SUBREDDIT']:
-#             comm_graph.add_vertex(target)
-#             sentiment_counts = events[(events['SOURCE_SUBREDDIT'] == community_1) &
-#                                       (events['TARGET_SUBREDDIT'] == target)
-#                                       ]['LINK_SENTIMENT'].value_counts()
-#             comm_graph.add_edge(community_1, target)
-#     graph_draw(comm_graph)
-#
+def TopPosts(df,n=0) -> dict:
+    freq = dict()
+    for index, post in df.iterrows():
+        targets = post["TARGET_POST_IDS"]
+        for id in targets:
+            if id not in freq.keys():
+                freq[id] = 0
+            else:
+                freq[id] += 1
+    freq = dict(sorted(freq.items(), key=lambda item:item[1]))
+    print(freq)
+    return freq
 
 
-# def areas(df) -> dict:
-#     areas_dic = dict()
-#     area_c = 1
-#     node_list = []
-#     communities = df['SOURCE_SUBREDDIT'].value_counts()[:200].keys().unique()
-#     for community in communities:
-#         if community not in node_list:
-#             print("adding node to discovered bins")
-#             node_list.append(community)
-#             areas_dic[area_c] = list()
-#             areas_dic[area_c].append(community)
-#             events = df[(df['SOURCE_SUBREDDIT'] == community)]
-#             targets = events['TARGET_SUBREDDIT'].unique()
-#             for target in targets:
-#                 node_list.append(target)
+def findPosts(ID,df) -> list:
+    results = list()
+    for index, row in df.iterrows():
+        if ID in row["TARGET_POST_IDS"]:
+            results.append(row["POST_ID"])
+    return results
 
+
+def load_ds():
+    df = pd.read_csv("data\\out.csv", low_memory=False)
+    df = df.drop(columns=["AUTHOR", "TEXT", "URL", "LINK"], axis=1)
+    df1 = df["TARGET_POST_IDS"].apply(update)
+    df1 = pd.concat([df1, df[["TIMESTAMP", "POST_ID", "SOURCE_SUBREDDIT", "TARGET_SUBREDDITS"]]], axis=1)
+    df1.dropna()
+    df1 = df1[df1["TIMESTAMP"] != "TIMESTAMP"]
+    df = df1["TIMESTAMP"].apply(convert_to_datetime)
+    df = pd.concat([df, df1[["TARGET_POST_IDS", "POST_ID", "SOURCE_SUBREDDIT", "TARGET_SUBREDDITS"]]], axis=1)
+    df.dropna()
+    #posts = GetPostID(all_data, n=5)
+    Posts = TopPosts(df)
+    PostID = next(iter(Posts))
+    print(PostID)
+    InformationCascades(df, PostID="6116dt")
+    # for post in posts:
+    #     InformationCascades(df, PostID=post)
+
+def InformationCascades(df, PostID="4asjoo"):
+    explored_nodes = list()
+    labels = {}
+    post_list = list()
+    plt.figure(figsize=(10, 10))
+    casc_graph = nx.DiGraph()
+    post_list.append(PostID)
+    labels[PostID] = PostID
+    casc_graph.add_node(PostID)
+    while not (len(post_list) ==0):
+        print(f"Exploring {post_list[0]}")
+        print(f"Queue size {len(post_list)}")
+        print("#"*20)
+        explored_nodes.append(post_list[0])
+        results = findPosts(post_list[0], df)
+        if not (len(results) ==0):
+            for result in results:
+                if result not in explored_nodes:
+                    casc_graph.add_node(result)
+                    labels[result] = result
+                    post_list.append(result)
+                    casc_graph.add_edge(result, post_list[0])
+        post_list.pop(0)
+    pos = nx.spring_layout(casc_graph)
+    nx.draw_networkx_nodes(casc_graph, label=labels, pos=pos, node_color="orange", node_size=500)
+    nx.draw_networkx_labels(casc_graph, labels=labels, pos=pos, font_size=6)
+    nx.draw_networkx_edges(casc_graph, pos=pos)
+
+    plt.show()
+
+
+
+def convert_to_datetime(timestamp):
+    return datetime.strptime(timestamp, '%Y-%m-%d %H:%M')
+
+
+def update(TARGET_POST_IDS):
+    return eval(TARGET_POST_IDS)
+
+
+def GetPostID(df,n=0):
+     return df.value_counts('POST_ID').keys()[:n]
+
+
+def Points(n=1, x_start=0, y_start=0) -> list:
+    pi = math.pi
+    points = []
+    r = 3
+    for i in range(n):
+        angle = 2 * math.pi * i / n
+        x = (math.cos(angle) * r) + x_start
+        y = (math.sin(angle) * r) + y_start
+        points.append([x, y])
+    return points
+
+
+def normalize_data(data):
+    # Find the minimum and maximum values in the data
+    data_min = min(data)
+    data_max = max(data)
+
+    # Calculate the range of the data
+    data_range = data_max - data_min
+    if data_range == 0:
+        data_range = 100
+    # Calculate the scaling factor
+    scale_factor = (750 - 100) / data_range
+
+    # Normalize the data using linear scaling
+    normalized_data = [int((x - data_min) * scale_factor + 40) for x in data]
+
+    return normalized_data
+
+
+def clustered_graph(df) -> None:
+    communities = df['SOURCE_SUBREDDIT'].value_counts()[:20].index
+    option = ['g', 'r', 'b']
+    colors = []
+    node_sizes = []
+    nodelist = []
+    labels = {}
+    comm_graph = nx.DiGraph()
+    f_pos = dict()
+    for community_1 in communities:
+        events = df[df['SOURCE_SUBREDDIT'] == community_1][:30]
+        if community_1 not in nodelist:
+            label = community_1
+            height = width = len(events)
+            if height < 20:
+                height = width = 30
+                label = " "
+            else:
+                height = width = len(events) * 100
+            weight = events['LINK_SENTIMENT'].value_counts().keys()[0]
+            if weight == 1:
+                colors.append(option[0])
+            else:
+                colors.append(option[1])
+
+            comm_graph.add_node(community_1)
+            labels[community_1] = label
+            node_sizes.append(height)
+            nodelist.append(community_1)
+
+        for target in events['TARGET_SUBREDDIT']:
+            sentiment_counts = events[events['TARGET_SUBREDDIT'] == target]['LINK_SENTIMENT'].value_counts()
+            if target not in nodelist:
+                label = target
+                height = width = sentiment_counts.sum()
+                if height < 20:
+                    height = width = 30
+                    label = " "
+                else:
+                    height = width = sentiment_counts.sum() * 100
+                comm_graph.add_node(target)
+                labels[target] = label
+                node_sizes.append(height)
+                nodelist.append(target)
+
+            comm_graph.add_edge(community_1, target)
+
+            if len(sentiment_counts) > 1:
+                if sentiment_counts.values[0] > sentiment_counts.values[1]:
+                    weight = sentiment_counts.keys()[0]
+                    if weight == 1:
+                        colors.append(option[0])
+                    else:
+                        colors.append(option[1])
+                else:
+                    colors.append(option[2])
+            else:
+                weight = sentiment_counts.keys()[0]
+                if weight == 1:
+                    colors.append(option[0])
+                else:
+                    colors.append(option[1])
+    parts = nx.community.louvain_partitions(comm_graph, seed=0)
+    count = 0
+    partitions = []
+    for _ in parts:
+        count = len(_)
+        partitions.append(_)
+    print(partitions)
+    grids = int(np.ceil(np.sqrt(count)))
+    x_positions = np.linspace(-20, 20, grids)
+    y_positions = np.linspace(-20, 20, grids)
+    positions = [[x, y] for x in x_positions for y in y_positions]
+    plt.figure(figsize=(20, 20))
+    pos = nx.spring_layout(comm_graph, k=1)
+    for node in comm_graph.nodes():
+        if node not in pos:
+            print(f"Node {node} is missing from the positions dictionary.")
+            pos[node] = [0, 0]
+    i = 0
+    for parts in partitions:
+        for nodes in parts:
+            sub_node_sizes = []
+            sub_node_labels = {}
+            sub_node_colors = []
+            print(f"Nodes: \n {nodes}")
+            if isinstance(nodes, int):
+                nodes = [nodes]
+            if nodes:
+                subgraph = comm_graph.subgraph(nodes)
+                for node in nodes:
+                    idx = list(comm_graph.nodes()).index(node)
+                    sub_node_sizes.append(node_sizes[idx])
+                    sub_node_labels[node] = labels[node]
+
+
+                subgraph_pos = dict()
+                points = Points(len(subgraph.nodes()), positions[i][0], positions[i][1])
+                j=0
+                for n in subgraph.nodes():
+                    subgraph_pos[n] = points[j]
+                    f_pos[n] = points[j]
+                    j += 1
+
+                _pos = subgraph_pos
+                print(f"subgraph_pos: {subgraph_pos}")
+                i += 1
+    nx.draw_networkx_nodes(comm_graph, pos=f_pos, nodelist=comm_graph.nodes(),
+                                       node_size=normalize_data(node_sizes),
+                                       node_color='orange', edgecolors='grey')
+    nx.draw_networkx_labels(comm_graph, pos=f_pos, labels=labels, font_size=3)
+    nx.draw_networkx_edges(comm_graph, pos=f_pos, alpha=0.5, edge_color=colors)
+
+    plt.axis('off')
+    plt.tight_layout()
+    plt.savefig(".\\graphs\\Clustered_communities.png", format="PNG", bbox_inches='tight')
+    plt.show()
+
+
+def clustered_graph2(df) -> None:
+    communities = df['SOURCE_SUBREDDIT'].value_counts()[:20].index#.keys()#[:10].index
+    option = ['g', 'r', 'b']
+    colors = []
+    node_sizes = []
+    nodelist = []
+    labels = {}
+    comm_graph = nx.DiGraph()
+    for community_1 in communities:
+        events = df[df['SOURCE_SUBREDDIT'] == community_1][:20]
+        if community_1 not in nodelist:
+            label = community_1
+            height = width = len(events)
+            if height < 20:
+                height = width = 30
+                label = " "
+            else:
+                height = width = len(events) * 100
+            weight = events['LINK_SENTIMENT'].value_counts().keys()[0]
+            if weight == 1:
+                colors.append(option[0])
+            else:
+                colors.append(option[1])
+
+            comm_graph.add_node(community_1)
+            labels[community_1] = label
+            node_sizes.append(height)
+            nodelist.append(community_1)
+
+        for target in events['TARGET_SUBREDDIT']:
+            sentiment_counts = events[events['TARGET_SUBREDDIT'] == target]['LINK_SENTIMENT'].value_counts()
+            if target not in nodelist:
+                label = target
+                height = width = sentiment_counts.sum()
+                if height < 20:
+                    height = width = 30
+                    label = " "
+                else:
+                    height = width = sentiment_counts.sum() * 100
+                comm_graph.add_node(target)
+                labels[target] = label
+                node_sizes.append(height)
+                nodelist.append(target)
+
+            comm_graph.add_edge(community_1, target)
+
+            if len(sentiment_counts) > 1:
+                if sentiment_counts.values[0] > sentiment_counts.values[1]:
+                    weight = sentiment_counts.keys()[0]
+                    if weight == 1:
+                        colors.append(option[0])
+                    else:
+                        colors.append(option[1])
+                else:
+                    colors.append(option[2])
+            else:
+                weight = sentiment_counts.keys()[0]
+                if weight == 1:
+                    colors.append(option[0])
+                else:
+                    colors.append(option[1])
+    parts = nx.community.louvain_partitions(comm_graph, seed=0)
+    count = 0
+    partitions = []
+    for _ in parts:
+        count = len(_)
+        partitions.append(_)
+    print(partitions)
+    grids = int(np.ceil(np.sqrt(count)))
+    x_positions = np.linspace(-30, 30, grids)
+    y_positions = np.linspace(-30, 30, grids)
+    positions = [[x, y] for x in x_positions for y in y_positions]
+    plt.figure(figsize=(20, 20))
+    pos = nx.spring_layout(comm_graph, k=1)
+    for node in comm_graph.nodes():
+        if node not in pos:
+            print(f"Node {node} is missing from the positions dictionary.")
+            pos[node] = [0, 0]
+    i = 0
+    for parts in partitions:
+        for nodes in parts:
+            sub_node_sizes = []
+            sub_node_labels = {}
+            sub_node_colors = []
+            print(f"Nodes: \n {nodes}")
+            if isinstance(nodes, int):
+                nodes = [nodes]
+            if nodes:
+                subgraph = comm_graph.subgraph(nodes)
+                for node in nodes:
+                    idx = list(comm_graph.nodes()).index(node)
+                    sub_node_sizes.append(node_sizes[idx])
+                    sub_node_labels[node] = labels[node]
+
+
+                subgraph_pos = dict()
+                points = Points(len(subgraph.nodes()), positions[i][0], positions[i][1])
+                j=0
+                for n in subgraph.nodes():
+                    subgraph_pos[n] = points[j]
+                    j += 1
+
+                _pos = subgraph_pos
+                print(f"subgraph_pos: {subgraph_pos}")
+                nx.draw_networkx_nodes(subgraph, pos=_pos, nodelist=nodes,
+                                       node_size=normalize_data(sub_node_sizes),
+                                       node_color='orange', edgecolors='grey')
+                nx.draw_networkx_labels(subgraph, pos=_pos, labels=sub_node_labels, font_size=6)
+                nx.draw_networkx_edges(subgraph, pos=_pos, alpha=0.5, edge_color=colors)
+                i += 1
+    plt.axis('off')
+    plt.tight_layout()
 
 
 def pgv_graph(df) -> None:
@@ -50,7 +369,6 @@ def pgv_graph(df) -> None:
     comm_graph.node_attr["style"] = "filled"
     nodelist = []
     communities = df['SOURCE_SUBREDDIT'].value_counts()[:200].keys().unique()
-    #area_list = areas(df)
     option = ['green', 'red', 'blue']
 
     for community_1 in communities:
@@ -421,7 +739,7 @@ body = pd.read_csv("data/soc-redditHyperlinks-body.tsv", delimiter="\t")
 all_data = pd.concat([titles, body])
 
 # Sample a subset of the data
-subset_data = all_data.sample(frac=0.009, random_state=0)  #### Change the fraction to change subset size ####
+subset_data = all_data.sample(frac=1, random_state=0)  #### Change the fraction to change subset size ####
 
 # Create directed graph
 G = nx.from_pandas_edgelist(subset_data, 'SOURCE_SUBREDDIT', 'TARGET_SUBREDDIT', create_using=nx.DiGraph())
@@ -479,8 +797,9 @@ partition = community_louvain.best_partition(G_undirected)
 # top_post = plotposts(subset_data, 20)
 # printtimeline(all_data, top_post)
 # print(len(all_data['POST_ID'].unique()), len(all_data['TIMESTAMP'].unique()))
-#graphallcommubnities(subset_data)
+# graphallcommubnities(subset_data)
 # plotcorrelations(all_data)
-pgv_graph(subset_data)
-#gt_graph(subset_data)
-plt.close()
+# clustered_graph(all_data)
+# gt_graph(subset_data)
+# print(Points(n=10, x_start=0.0, y_start=0))
+load_ds()

@@ -64,6 +64,9 @@ def InformationCascades(df, PostID="4asjoo"):
     post_list.append(PostID)
     labels[PostID] = PostID
     casc_graph.add_node(PostID)
+    pos = {}
+    pos[PostID] = [0, 0]
+    depth = list()
     while not (len(post_list) ==0):
         print(f"Exploring {post_list[0]}")
         print(f"Queue size {len(post_list)}")
@@ -71,14 +74,17 @@ def InformationCascades(df, PostID="4asjoo"):
         explored_nodes.append(post_list[0])
         results = findPosts(post_list[0], df)
         if not (len(results) ==0):
+            p = Points(len(results), pos[post_list[0]][0], pos[post_list[0]][1])
+            i = 0
             for result in results:
                 if result not in explored_nodes:
                     casc_graph.add_node(result)
+                    pos[result] = p[i]
+                    i += 1
                     labels[result] = result
                     post_list.append(result)
                     casc_graph.add_edge(result, post_list[0])
         post_list.pop(0)
-    pos = nx.spring_layout(casc_graph)
     nx.draw_networkx_nodes(casc_graph, label=labels, pos=pos, node_color="orange", node_size=500)
     nx.draw_networkx_labels(casc_graph, labels=labels, pos=pos, font_size=6)
     nx.draw_networkx_edges(casc_graph, pos=pos)
@@ -99,10 +105,9 @@ def GetPostID(df,n=0):
      return df.value_counts('POST_ID').keys()[:n]
 
 
-def Points(n=1, x_start=0, y_start=0) -> list:
+def Points(n=1, x_start=0, y_start=0, r=3) -> list:
     pi = math.pi
     points = []
-    r = 3
     for i in range(n):
         angle = 2 * math.pi * i / n
         x = (math.cos(angle) * r) + x_start

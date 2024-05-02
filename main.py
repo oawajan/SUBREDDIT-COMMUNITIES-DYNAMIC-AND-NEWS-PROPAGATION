@@ -1,6 +1,3 @@
-import collections
-
-import community
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -9,10 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import pygraphviz as pgv
 import math
-import os
-from collections import defaultdict
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
 
 def TopPosts(df,n=0) -> dict:
@@ -34,63 +28,75 @@ def findPosts(ID,df) -> list:
     for index, row in df.iterrows():
         if ID in row["TARGET_POST_IDS"]:
             results.append(row["POST_ID"])
-    return results
+    filtered = list()
+    for item in results:
+        if item not in filtered:
+            filtered.append(item)
+    return filtered
 
 
 def load_ds():
     df = pd.read_csv("data\\out.csv", low_memory=False)
     df = df.drop(columns=["AUTHOR", "TEXT", "URL", "LINK"], axis=1)
     df1 = df["TARGET_POST_IDS"].apply(update)
-    df1 = pd.concat([df1, df[["TIMESTAMP", "POST_ID", "SOURCE_SUBREDDIT", "TARGET_SUBREDDITS"]]], axis=1)
+    df1 = pd.concat([df1, df[["TIMESTAMP", "POST_ID",
+                              "SOURCE_SUBREDDIT", "TARGET_SUBREDDITS"]]], axis=1)
     df1.dropna()
     df1 = df1[df1["TIMESTAMP"] != "TIMESTAMP"]
     df = df1["TIMESTAMP"].apply(convert_to_datetime)
-    df = pd.concat([df, df1[["TARGET_POST_IDS", "POST_ID", "SOURCE_SUBREDDIT", "TARGET_SUBREDDITS"]]], axis=1)
+    df = pd.concat([df, df1[["TARGET_POST_IDS",
+                             "POST_ID", "SOURCE_SUBREDDIT", "TARGET_SUBREDDITS"]]], axis=1)
     df.dropna()
-    #posts = GetPostID(all_data, n=5)
-    Posts = TopPosts(df)
-    PostID = next(iter(Posts))
-    print(PostID)
-    InformationCascades(df, PostID="6116dt")
-    # for post in posts:
-    #     InformationCascades(df, PostID=post)
+    #Posts = TopPosts(df)
+    #PostID = next(iter(Posts))
+    #print(PostID)
+    InformationCascades(df,PostID="3l5xpg") #3l4t1t, 3l5xpg,5bibaj,6116dt
 
-def InformationCascades(df, PostID="4asjoo"):
+
+def InformationCascades(df, PostID='4asjoo'):
     explored_nodes = list()
     labels = {}
     post_list = list()
-    plt.figure(figsize=(10, 10))
+    plt.figure(figsize=(30, 30))
     casc_graph = nx.DiGraph()
     post_list.append(PostID)
-    labels[PostID] = PostID
-    casc_graph.add_node(PostID)
-    pos = {}
-    pos[PostID] = [0, 0]
-    depth = list()
-    while not (len(post_list) ==0):
+    initial = df[df['POST_ID'] == PostID]["SOURCE_SUBREDDIT"].values[-1]
+    labels[initial] = initial
+    casc_graph.add_node(initial)
+    pos = dict()
+    pos[initial] = [0, 0]
+    while not (len(post_list) == 0):
         print(f"Exploring {post_list[0]}")
         print(f"Queue size {len(post_list)}")
         print("#"*20)
         explored_nodes.append(post_list[0])
         results = findPosts(post_list[0], df)
-        if not (len(results) ==0):
-            p = Points(len(results), pos[post_list[0]][0], pos[post_list[0]][1])
+        if not (len(results) == 0):
+            source = df[df['POST_ID'] == post_list[0]]["SOURCE_SUBREDDIT"].values[-1]
+            p = Points(len(results), pos[source][0],
+                       pos[source][1], r=1, c=1)
             i = 0
             for result in results:
-                if result not in explored_nodes:
-                    casc_graph.add_node(result)
-                    pos[result] = p[i]
-                    i += 1
-                    labels[result] = result
+                if (result not in explored_nodes) and (results not in post_list):
+                    target = df[df['POST_ID'] == result]["SOURCE_SUBREDDIT"].values[-1]
+
+                    if target not in pos.keys():
+                        print(f"adding node {target}")
+                        casc_graph.add_node(target)
+                        pos[target] = p[i]
+                        labels[target] = target
                     post_list.append(result)
-                    casc_graph.add_edge(result, post_list[0])
+                    casc_graph.add_edge(source, target)
+                    i += 1
         post_list.pop(0)
-    nx.draw_networkx_nodes(casc_graph, label=labels, pos=pos, node_color="orange", node_size=500)
-    nx.draw_networkx_labels(casc_graph, labels=labels, pos=pos, font_size=6)
+
+    nx.draw_networkx_nodes(casc_graph, label=labels, pos=pos,
+                           node_color="orange", node_size=500)
+    nx.draw_networkx_labels(casc_graph, labels=labels,
+                            pos=pos, font_size=6)
     nx.draw_networkx_edges(casc_graph, pos=pos)
 
     plt.show()
-
 
 
 def convert_to_datetime(timestamp):
@@ -101,19 +107,39 @@ def update(TARGET_POST_IDS):
     return eval(TARGET_POST_IDS)
 
 
-def GetPostID(df,n=0):
+def GetPostID(df, n=0):
      return df.value_counts('POST_ID').keys()[:n]
 
 
-def Points(n=1, x_start=0, y_start=0, r=3) -> list:
+def Points(n=1, x_start=0, y_start=0, r=3, c=2) -> list:
+
+    if n == 1:
+        return [[x_start+1, y_start]]
+
     pi = math.pi
     points = []
-    for i in range(n):
-        angle = 2 * math.pi * i / n
-        x = (math.cos(angle) * r) + x_start
-        y = (math.sin(angle) * r) + y_start
-        points.append([x, y])
-    return points
+
+    if 2 == c:
+        for i in range(n):
+            angle = 2 * pi * i / n
+            x = (math.cos(angle) * r) + x_start
+            y = (math.sin(angle) * r) + y_start
+            points.append([x, y])
+        return points
+
+    else:
+        for i in range(n):
+            angle = 1 * pi * i / n
+            x = (math.cos(angle) * r) + x_start
+            y = (math.sin(angle) * r) + y_start
+            points.append([x, y])
+
+        for point in points:
+            if 0 > point[0]:
+                point[0] = point[0] * -1
+                point[1] = point[1] * -1
+        print(points)
+        return points
 
 
 def normalize_data(data):
@@ -165,7 +191,8 @@ def clustered_graph(df) -> None:
             nodelist.append(community_1)
 
         for target in events['TARGET_SUBREDDIT']:
-            sentiment_counts = events[events['TARGET_SUBREDDIT'] == target]['LINK_SENTIMENT'].value_counts()
+            sentiment_counts = events[events['TARGET_SUBREDDIT'] == target
+                                      ]['LINK_SENTIMENT'].value_counts()
             if target not in nodelist:
                 label = target
                 height = width = sentiment_counts.sum()
@@ -231,7 +258,8 @@ def clustered_graph(df) -> None:
 
 
                 subgraph_pos = dict()
-                points = Points(len(subgraph.nodes()), positions[i][0], positions[i][1])
+                points = Points(len(subgraph.nodes()), positions[i][0],
+                                positions[i][1], r=3, c=2)
                 j=0
                 for n in subgraph.nodes():
                     subgraph_pos[n] = points[j]
@@ -283,7 +311,8 @@ def clustered_graph2(df) -> None:
             nodelist.append(community_1)
 
         for target in events['TARGET_SUBREDDIT']:
-            sentiment_counts = events[events['TARGET_SUBREDDIT'] == target]['LINK_SENTIMENT'].value_counts()
+            sentiment_counts = events[events['TARGET_SUBREDDIT'] == target
+                                      ]['LINK_SENTIMENT'].value_counts()
             if target not in nodelist:
                 label = target
                 height = width = sentiment_counts.sum()
@@ -368,7 +397,8 @@ def clustered_graph2(df) -> None:
 
 
 def pgv_graph(df) -> None:
-    comm_graph = pgv.AGraph(directed=True, nodesep=10.0, ranksep=30.0, overlap=False, splines='true')
+    comm_graph = pgv.AGraph(directed=True, nodesep=10.0, ranksep=30.0,
+                            overlap=False, splines='true')
     comm_graph.node_attr["shape"] = "circle"
     comm_graph.node_attr["color"] = "orange"
     comm_graph.node_attr["style"] = "filled"
@@ -426,8 +456,10 @@ def pgv_graph(df) -> None:
                     color = option[2]
                     x1 = np.log10(sentiment_counts.values[0] * 2.5)
                     y1 = np.log10(sentiment_counts.values[0] * 2.5)
-                    x2 = np.log10((sentiment_counts.values[0] - sentiment_counts.values[1]) * 2.5)
-                    y2 = np.log10((sentiment_counts.values[0] - sentiment_counts.values[1]) * 2.5)
+                    x2 = np.log10((sentiment_counts.values[0]
+                                   - sentiment_counts.values[1]) * 2.5)
+                    y2 = np.log10((sentiment_counts.values[0]
+                                   - sentiment_counts.values[1]) * 2.5)
                     length = 3
             else:
                 weight = sentiment_counts.keys()[0]
@@ -447,9 +479,11 @@ def pgv_graph(df) -> None:
                     color = option[1]
 
             node = comm_graph.get_node(community_1)
-            node.attr["pos"] = f"{-(float(x1) - 7000) / 10.0:f},{(float(y1) - 2000) / 10.0:f}"
+            node.attr["pos"] = (f"{-(float(x1) - 7000) / 10.0:f},"
+                                f"{(float(y1) - 2000) / 10.0:f}")
             node = comm_graph.get_node(target)
-            node.attr["pos"] = f"{-(float(x2) - 7000) / 10.0:f},{(float(y2) - 2000) / 10.0:f}"
+            node.attr["pos"] = (f"{-(float(x2) - 7000) / 10.0:f},"
+                                f"{(float(y2) - 2000) / 10.0:f}")
             comm_graph.add_edge(community_1, target, color=color, len=length)
 
     comm_graph.layout("fdp")
@@ -481,7 +515,8 @@ def plotcorrelations(df):
 def plotcommubnities(df, number):
     # print top 20
     bars = df.value_counts('SOURCE_SUBREDDIT')
-    plt.bar(bars.keys()[:number], bars.values[:number], width=1, label="overall", edgecolor='black')
+    plt.bar(bars.keys()[:number], bars.values[:number], width=1,
+            label="overall", edgecolor='black')
     plt.title(f"Top {number} Active Subreddits")
     plt.xlabel("Communities")
     plt.ylabel("Frequency")
@@ -492,7 +527,8 @@ def plotcommubnities(df, number):
 
     # print top 20 positive subreddits
     positive = df[df['LINK_SENTIMENT'] == 1].value_counts('SOURCE_SUBREDDIT')
-    plt.bar(positive.keys()[:number], positive.values[:number], width=1, label="Positive", edgecolor='black')
+    plt.bar(positive.keys()[:number], positive.values[:number], width=1,
+            label="Positive", edgecolor='black')
     plt.title(f"Top {number} Positive Subreddits")
     plt.xlabel("Communities")
     plt.ylabel("Frequency")
@@ -503,7 +539,8 @@ def plotcommubnities(df, number):
 
     # print top 20 positive subreddits
     positive = df[df['LINK_SENTIMENT'] == -1].value_counts('SOURCE_SUBREDDIT')
-    plt.bar(positive.keys()[:number], positive.values[:number], width=1, label="Negative", edgecolor='black')
+    plt.bar(positive.keys()[:number], positive.values[:number], width=1,
+            label="Negative", edgecolor='black')
     plt.title(f"Top {number} Negative Subreddits")
     plt.xlabel("Communities")
     plt.ylabel("Frequency")
@@ -517,9 +554,12 @@ def plotcommubnities(df, number):
     positive = df[df['LINK_SENTIMENT'] == 1].value_counts('SOURCE_SUBREDDIT')
     negative = df[df['LINK_SENTIMENT'] == -1].value_counts('SOURCE_SUBREDDIT')
     width = 0.5
-    plt.bar(bars.keys()[:number], bars.values[:number], width=width, label="overall", edgecolor='#008fd5')
-    plt.bar(negative.keys()[:number], negative.values[:number], width=width, label="negative", edgecolor='#ffffff')
-    plt.bar(positive.keys()[:number], positive.values[:number], width=width, label="positive", edgecolor='#eeeeee')
+    plt.bar(bars.keys()[:number], bars.values[:number], width=width,
+            label="overall", edgecolor='#008fd5')
+    plt.bar(negative.keys()[:number], negative.values[:number], width=width,
+            label="negative", edgecolor='#ffffff')
+    plt.bar(positive.keys()[:number], positive.values[:number], width=width,
+            label="positive", edgecolor='#eeeeee')
     plt.title(f"Top {number}")
     plt.xlabel("Communities")
     plt.ylabel("Frequency")
@@ -543,9 +583,12 @@ def plotcommubnities(df, number):
                            (df['LINK_SENTIMENT'] == -1)].shape[0])
         subreddits.append(subreddit)
 
-    plt.bar(indexes - width, subset_bars.values[:number], width=width, label="overall", edgecolor='#008fd5')
-    plt.bar(indexes, negative, width=width, label="negative", edgecolor='#ffffff')
-    plt.bar(indexes + width, positive, width=width, label="positive", edgecolor='#eeeeee')
+    plt.bar(indexes - width, subset_bars.values[:number], width=width,
+            label="overall", edgecolor='#008fd5')
+    plt.bar(indexes, negative, width=width, label="negative",
+            edgecolor='#ffffff')
+    plt.bar(indexes + width, positive, width=width, label="positive",
+            edgecolor='#eeeeee')
     plt.xticks(ticks=indexes, labels=subreddits)
     plt.tick_params(axis='x', labelrotation=90)
     plt.xlabel("Communities")
@@ -664,7 +707,8 @@ def graphcommubnities(df, source):
 def plotposts(df, number=20):
     # print top 20
     bars = df.value_counts('POST_ID')
-    plt.bar(bars.keys()[:number], bars.values[:number], width=1, label="overall", edgecolor='black')
+    plt.bar(bars.keys()[:number], bars.values[:number], width=1,
+            label="overall", edgecolor='black')
     plt.title(f"Top {number} Propagated Posts")
     plt.xlabel("Posts_ID")
     plt.ylabel("Frequency")
@@ -676,7 +720,8 @@ def plotposts(df, number=20):
 
     # print top 20 positive
     bars = df[df['LINK_SENTIMENT'] == 1].value_counts('POST_ID')
-    plt.bar(bars.keys()[:number], bars.values[:number], width=1, label="overall", edgecolor='black')
+    plt.bar(bars.keys()[:number], bars.values[:number], width=1,
+            label="overall", edgecolor='black')
     plt.title(f"Top {number} positive Propagated Posts")
     plt.xlabel("Posts_ID")
     plt.ylabel("Frequency")
@@ -688,7 +733,8 @@ def plotposts(df, number=20):
 
     # print top 20 negative
     bars = df[df['LINK_SENTIMENT'] == -1].value_counts('POST_ID')
-    plt.bar(bars.keys()[:number], bars.values[:number], width=1, label="overall", edgecolor='black')
+    plt.bar(bars.keys()[:number], bars.values[:number], width=1,
+            label="overall", edgecolor='black')
     plt.title(f"Top {number} negative Propagated Posts")
     plt.xlabel("Posts_ID")
     plt.ylabel("Frequency")
@@ -714,9 +760,10 @@ def graphpost(df, POST_ID) -> None:
 
     for target in post_events['TARGET_SUBREDDIT']:
         post_graph.add_edge(source, target)
-        post_graph[source][target]['weight'] = post_events[(post_events['SOURCE_SUBREDDIT'] == source) &
-                                                           (post_events['TARGET_SUBREDDIT'] == target)
-                                                           ]['LINK_SENTIMENT'].values[0]
+        post_graph[source][target]['weight'] = post_events[
+            (post_events['SOURCE_SUBREDDIT'] == source) &
+            (post_events['TARGET_SUBREDDIT'] == target)
+            ]['LINK_SENTIMENT'].values[0]
     for e in post_graph.edges:
         labels[e] = post_graph.edges[e]['weight']
         if labels[e] == 1:

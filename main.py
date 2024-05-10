@@ -282,7 +282,7 @@ def clustered_graph(df) -> None:
 
 
 def clustered_graph2(df) -> None:
-    communities = df['SOURCE_SUBREDDIT'].value_counts()[:20].index#.keys()#[:10].index
+    communities = df['SOURCE_SUBREDDIT'].value_counts()[:20].index
     option = ['g', 'r', 'b']
     colors = []
     node_sizes = []
